@@ -1,0 +1,155 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="using:TimeLogger.App.Features.Home.Models"
+             xmlns:vm="using:TimeLogger.App.Features.Home.ViewModels"
+             mc:Ignorable="d"
+             x:Class="TimeLogger.App.Features.Home.Views.HomeView"
+             x:DataType="vm:HomeViewModel"
+             d:DesignWidth="1100"
+             d:DesignHeight="700">
+
+  <Grid Margin="14,6,14,0" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
+    <TextBlock Grid.ColumnSpan="2"
+               Text="{Binding HeaderTitle}"
+               HorizontalAlignment="Center"
+               FontSize="20"
+               FontWeight="Bold"
+               Margin="0,2,0,0" />
+
+    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+      <Button Content="Export Day CSV" Classes="pill"/>
+      <Button Content="Export Range CSV" Classes="pill"/>
+    </StackPanel>
+
+    <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+      <Border Background="#2C2C2C"
+              CornerRadius="4"
+              Padding="8,4"
+              PointerPressed="OnDateContainerPressed">
+        <Grid>
+          <StackPanel Orientation="Horizontal" Spacing="8" IsHitTestVisible="False">
+            <TextBlock Text="📅" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding SelectedDateDisplay}" VerticalAlignment="Center" FontWeight="SemiBold" />
+          </StackPanel>
+          <CalendarDatePicker x:Name="EntryDatePicker"
+                              SelectedDate="{Binding SelectedDate}"
+                              Opacity="0"
+                              Width="1"
+                              Height="1"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Top" />
+        </Grid>
+      </Border>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="Start" VerticalAlignment="Center"/>
+        <ComboBox Width="110"
+                  ItemsSource="{Binding TimeOptions}"
+                  SelectedItem="{Binding SelectedStartTime}" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Text="End" VerticalAlignment="Center"/>
+        <ComboBox Width="110"
+                  ItemsSource="{Binding TimeOptions}"
+                  SelectedItem="{Binding SelectedEndTime}" />
+      </StackPanel>
+
+      <TextBlock Grid.Column="5"
+                 Text="{Binding TotalDuration, StringFormat=Total\: {0}}"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Center"
+                 FontWeight="SemiBold"/>
+    </Grid>
+
+    <StackPanel Grid.Row="3" Grid.Column="0" Spacing="10" Width="560">
+      <StackPanel Spacing="6">
+        <TextBlock Text="Task" FontWeight="SemiBold" />
+        <ComboBox ItemsSource="{Binding TaskOptions}"
+                  SelectedItem="{Binding SelectedTask}"
+                  Height="34"
+                  HorizontalAlignment="Stretch"/>
+      </StackPanel>
+
+      <StackPanel Spacing="6">
+        <TextBlock Text="Notes" FontWeight="SemiBold" />
+        <TextBox Height="130"
+                 Text="{Binding Notes}"
+                 TextWrapping="Wrap"
+                 Watermark="Add notes here..."
+                 AcceptsReturn="True"
+                 VerticalContentAlignment="Top"
+                 HorizontalAlignment="Stretch"/>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Content="Add Entry" Classes="pill" Command="{Binding AddEntryCommand}"/>
+        <Button Content="Delete Selected" Classes="pill" Command="{Binding DeleteSelectedCommand}"/>
+      </StackPanel>
+
+      <Border Background="#1F1F1F" CornerRadius="10" Padding="10" Height="165">
+        <ListBox ItemsSource="{Binding WorkEntries}"
+                 SelectedItem="{Binding SelectedEntry}"
+                 Background="#2A2A2A"
+                 BorderThickness="0"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 DoubleTapped="OnEntriesListDoubleTapped">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="models:WorkEntry">
+              <Border Padding="10" Margin="0,0,0,8" Background="#343434" CornerRadius="8">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{Binding Task}" FontWeight="SemiBold" FontSize="14"/>
+                  <TextBlock Text="{Binding DateLabel}"/>
+                  <TextBlock Text="{Binding TimeRange}"/>
+                  <TextBlock Text="{Binding Notes}" Opacity="0.85" TextWrapping="Wrap"/>
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+
+      <TextBlock Text="{Binding EntryCountLabel}" FontWeight="SemiBold"/>
+    </StackPanel>
+
+    <Border Grid.Row="3"
+            Grid.Column="1"
+            Background="#2A2A2A"
+            CornerRadius="10"
+            Padding="12"
+            VerticalAlignment="Top"
+            Margin="0,0,0,0">
+      <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <TextBlock Text="Outlook Calendar" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+
+          <ComboBox Grid.Column="1" Width="130" ItemsSource="{Binding QuickRanges}" SelectedIndex="0" HorizontalAlignment="Right" />
+          <Button Grid.Column="2" Content="Refresh" Classes="pill" />
+        </Grid>
+
+        <TextBlock Text="{Binding CalendarGroupLabel}" FontStyle="Italic" Opacity="0.95"/>
+
+        <ScrollViewer Height="420" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding CalendarEvents}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="models:CalendarEvent">
+                <Border Background="#383838" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                  <StackPanel Spacing="2">
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding DateLine}"/>
+                    <TextBlock Text="{Binding TimeRange}"/>
+                    <TextBlock Text="{Binding Location}" Opacity="0.85"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock Text="{Binding EventCountLabel}" FontWeight="SemiBold" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>
