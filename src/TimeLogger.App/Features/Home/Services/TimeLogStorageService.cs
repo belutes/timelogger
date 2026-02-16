@@ -41,6 +41,38 @@ public sealed class TimeLogStorageService : ITimeLogStorageService
             .ToList();
     }
 
+    public async Task<IReadOnlyList<WorkEntry>> LoadEntriesInRangeAsync(DateTime startDate, DateTime endDateInclusive)
+    {
+        var start = startDate.Date;
+        var end = endDateInclusive.Date;
+        if (end < start)
+        {
+            return Array.Empty<WorkEntry>();
+        }
+
+        var rangeEntries = new List<WorkEntry>();
+        var monthCursor = new DateTime(start.Year, start.Month, 1);
+        var lastMonth = new DateTime(end.Year, end.Month, 1);
+
+        while (monthCursor <= lastMonth)
+        {
+            var monthFile = GetMonthFilePath(monthCursor);
+            if (File.Exists(monthFile))
+            {
+                var monthRecord = await ReadMonthRecordAsync(monthFile);
+                rangeEntries.AddRange(monthRecord.Entries.Where(entry =>
+                    entry.Date.Date >= start && entry.Date.Date <= end));
+            }
+
+            monthCursor = monthCursor.AddMonths(1);
+        }
+
+        return rangeEntries
+            .OrderBy(entry => entry.Date)
+            .ThenBy(entry => entry.Start)
+            .ToList();
+    }
+
     public async Task SaveEntriesForDateAsync(DateTime date, IReadOnlyList<WorkEntry> dayEntries)
     {
         var monthFile = GetMonthFilePath(date);

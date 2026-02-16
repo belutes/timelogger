@@ -23,6 +23,6 @@ public sealed class MainWindowViewModel : ViewModelBase
             calendarService = new GraphCalendarService(config);
         }
 
-        return new HomeViewModel(new TimeLogStorageService(), calendarService);
+        return new HomeViewModel(new TimeLogStorageService(), calendarService, new CsvTimeLogExportService());
     }
 }

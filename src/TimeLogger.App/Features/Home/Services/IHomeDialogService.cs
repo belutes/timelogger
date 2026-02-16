@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TimeLogger.App.Features.Home.Models;
@@ -10,6 +11,7 @@ public interface IHomeDialogService
     Task<bool> ShowConfirmationAsync(string title, string message, string confirmText = "OK", string cancelText = "Cancel");
     Task<string?> ShowCustomTaskPromptAsync();
     Task<string?> ShowTextInputAsync(string title, string prompt, string watermark, string initialValue = "");
+    Task<DateRangeInput?> ShowDateRangePromptAsync(DateTime defaultStartDate, DateTime defaultEndDate);
     Task<EditEntryInput?> ShowEditEntryAsync(
         WorkEntry entry,
         IReadOnlyList<string> timeOptions);

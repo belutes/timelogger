@@ -11,5 +11,6 @@ public interface ITimeLogStorageService
     bool RecordsDirectoryExists();
     void CreateRecordsDirectory();
     Task<IReadOnlyList<WorkEntry>> LoadEntriesForDateAsync(DateTime date);
+    Task<IReadOnlyList<WorkEntry>> LoadEntriesInRangeAsync(DateTime startDate, DateTime endDateInclusive);
     Task SaveEntriesForDateAsync(DateTime date, IReadOnlyList<WorkEntry> dayEntries);
 }

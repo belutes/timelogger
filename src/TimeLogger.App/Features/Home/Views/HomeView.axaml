@@ -10,7 +10,8 @@
              d:DesignWidth="1100"
              d:DesignHeight="700">
 
-  <Grid Margin="14,6,14,0" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid Margin="14,6,14,0" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
     <TextBlock Grid.ColumnSpan="2"
                Text="{Binding HeaderTitle}"
                HorizontalAlignment="Center"
@@ -19,8 +20,8 @@
                Margin="0,2,0,0" />
 
     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-      <Button Content="Export Day CSV" Classes="pill"/>
-      <Button Content="Export Range CSV" Classes="pill"/>
+      <Button Content="Export Day CSV" Classes="pill" Command="{Binding ExportDayCsvCommand}"/>
+      <Button Content="Export Range CSV" Classes="pill" Command="{Binding ExportRangeCsvCommand}"/>
     </StackPanel>
 
     <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
@@ -64,7 +65,7 @@
                  FontWeight="SemiBold"/>
     </Grid>
 
-    <StackPanel Grid.Row="3" Grid.Column="0" Spacing="10" Width="560">
+    <StackPanel Grid.Row="3" Grid.Column="0" Spacing="10">
       <StackPanel Spacing="6">
         <TextBlock Text="Task" FontWeight="SemiBold" />
         <ComboBox ItemsSource="{Binding TaskOptions}"
@@ -158,5 +159,6 @@
         <TextBlock Text="{Binding EventCountLabel}" FontWeight="SemiBold" />
       </StackPanel>
     </Border>
-  </Grid>
+    </Grid>
+  </ScrollViewer>
 </UserControl>

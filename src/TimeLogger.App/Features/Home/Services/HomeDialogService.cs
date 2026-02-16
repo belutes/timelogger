@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -30,6 +31,12 @@ public sealed class HomeDialogService(Window owner) : IHomeDialogService
     {
         var dialog = new TextInputDialogWindow(title, prompt, watermark, initialValue);
         return await dialog.ShowDialog<string?>(owner);
+    }
+
+    public async Task<DateRangeInput?> ShowDateRangePromptAsync(DateTime defaultStartDate, DateTime defaultEndDate)
+    {
+        var dialog = new DateRangeDialogWindow(defaultStartDate, defaultEndDate);
+        return await dialog.ShowDialog<DateRangeInput?>(owner);
     }
 
     public async Task<EditEntryInput?> ShowEditEntryAsync(WorkEntry entry, IReadOnlyList<string> timeOptions)

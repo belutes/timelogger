@@ -15,6 +15,7 @@ public sealed class HomeViewModel : ViewModelBase
 {
     private readonly ITimeLogStorageService _storage;
     private readonly ICalendarService _calendarService;
+    private readonly ITimeLogExportService _exportService;
     private IHomeDialogService? _dialogs;
 
     private DateTime? _selectedDate = DateTime.Today;
@@ -30,10 +31,14 @@ public sealed class HomeViewModel : ViewModelBase
     private bool _isUpdatingTimes;
     private string? _lastCalendarError;
 
-    public HomeViewModel(ITimeLogStorageService storage, ICalendarService calendarService)
+    public HomeViewModel(
+        ITimeLogStorageService storage,
+        ICalendarService calendarService,
+        ITimeLogExportService exportService)
     {
         _storage = storage;
         _calendarService = calendarService;
+        _exportService = exportService;
 
         TimeOptions = new ObservableCollection<string>(BuildTimeOptions());
         SetDefaultWorkdayTimes();
@@ -66,6 +71,8 @@ public sealed class HomeViewModel : ViewModelBase
         DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedAsync, CanDeleteSelected);
         EditSelectedEntryCommand = new AsyncRelayCommand(EditSelectedEntryAsync, CanDeleteSelected);
         RefreshCalendarCommand = new AsyncRelayCommand(LoadCalendarEventsAsync);
+        ExportDayCsvCommand = new AsyncRelayCommand(ExportDayCsvAsync);
+        ExportRangeCsvCommand = new AsyncRelayCommand(ExportRangeCsvAsync);
     }
 
     public string HeaderTitle { get; } = "Daily Time Log";
@@ -181,6 +188,8 @@ public sealed class HomeViewModel : ViewModelBase
     public IAsyncRelayCommand DeleteSelectedCommand { get; }
     public IAsyncRelayCommand EditSelectedEntryCommand { get; }
     public IAsyncRelayCommand RefreshCalendarCommand { get; }
+    public IAsyncRelayCommand ExportDayCsvCommand { get; }
+    public IAsyncRelayCommand ExportRangeCsvCommand { get; }
 
     public void AttachDialogService(IHomeDialogService dialogs)
     {
@@ -421,6 +430,122 @@ public sealed class HomeViewModel : ViewModelBase
         }
     }
 
+    private async Task ExportDayCsvAsync()
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        var selectedDate = (SelectedDate ?? DateTime.Today).Date;
+        if (!await EnsureRecordsDirectoryAsync(
+                $"Create '{_storage.RecordsDirectoryPath}' to store export files?",
+                "Export Cancelled",
+                "CSV export was cancelled because the records folder was not created."))
+        {
+            return;
+        }
+
+        string? calendarFetchError = null;
+        IReadOnlyList<CalEvent> dayCalendarEvents;
+        try
+        {
+            var start = new DateTimeOffset(selectedDate);
+            var endExclusive = start.AddDays(1);
+            dayCalendarEvents = await _calendarService.GetEventsAsync(start, endExclusive);
+        }
+        catch (Exception ex)
+        {
+            calendarFetchError = ex.Message;
+            dayCalendarEvents = CalendarEvents
+                .Where(item => item.Start.Date == selectedDate)
+                .OrderBy(item => item.Start)
+                .ToList();
+        }
+
+        var csvPath = await _exportService.ExportDayCsvAsync(
+            _storage.RecordsDirectoryPath,
+            selectedDate,
+            WorkEntries.ToList(),
+            dayCalendarEvents,
+            TotalDuration,
+            calendarFetchError);
+
+        var message = $"Exported day CSV for {selectedDate:yyyy-MM-dd}.\n\n{csvPath}";
+        if (!string.IsNullOrWhiteSpace(calendarFetchError))
+        {
+            message += "\n\nCalendar events were exported from the currently loaded list because live calendar fetch failed.";
+        }
+
+        await _dialogs.ShowAlertAsync("Export Complete", message);
+    }
+
+    private async Task ExportRangeCsvAsync()
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        var defaultDate = (SelectedDate ?? DateTime.Today).Date;
+        var rangeInput = await _dialogs.ShowDateRangePromptAsync(defaultDate, defaultDate);
+        if (rangeInput is null)
+        {
+            return;
+        }
+
+        var startDate = rangeInput.StartDate.Date;
+        var endDate = rangeInput.EndDate.Date;
+        if (endDate < startDate)
+        {
+            await _dialogs.ShowAlertAsync("Invalid Range", "End date must be the same or later than start date.");
+            return;
+        }
+
+        if (!await EnsureRecordsDirectoryAsync(
+                $"Create '{_storage.RecordsDirectoryPath}' to store export files?",
+                "Export Cancelled",
+                "CSV export was cancelled because the records folder was not created."))
+        {
+            return;
+        }
+
+        var rangeEntries = await _storage.LoadEntriesInRangeAsync(startDate, endDate);
+
+        string? calendarFetchError = null;
+        IReadOnlyList<CalEvent> rangeCalendarEvents;
+        try
+        {
+            var start = new DateTimeOffset(startDate);
+            var endExclusive = new DateTimeOffset(endDate.AddDays(1));
+            rangeCalendarEvents = await _calendarService.GetEventsAsync(start, endExclusive);
+        }
+        catch (Exception ex)
+        {
+            calendarFetchError = ex.Message;
+            rangeCalendarEvents = CalendarEvents
+                .Where(item => item.Start.Date >= startDate && item.Start.Date <= endDate)
+                .OrderBy(item => item.Start)
+                .ToList();
+        }
+
+        var csvPath = await _exportService.ExportRangeCsvAsync(
+            _storage.RecordsDirectoryPath,
+            startDate,
+            endDate,
+            rangeEntries,
+            rangeCalendarEvents,
+            calendarFetchError);
+
+        var message = $"Exported range CSV for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}.\n\n{csvPath}";
+        if (!string.IsNullOrWhiteSpace(calendarFetchError))
+        {
+            message += "\n\nCalendar events were exported from the currently loaded list because live calendar fetch failed.";
+        }
+
+        await _dialogs.ShowAlertAsync("Export Complete", message);
+    }
+
     private (DateTimeOffset start, DateTimeOffset endExclusive) ResolveCalendarRange()
     {
         var day = (SelectedDate ?? DateTime.Today).Date;
@@ -446,25 +571,44 @@ public sealed class HomeViewModel : ViewModelBase
             return false;
         }
 
-        if (!_storage.RecordsDirectoryExists())
-        {
-            var shouldCreate = await _dialogs.ShowConfirmationAsync(
-                "Create Records Folder",
+        if (!await EnsureRecordsDirectoryAsync(
                 $"Create '{_storage.RecordsDirectoryPath}' to store time log records?",
-                "Create",
-                "Cancel");
-
-            if (!shouldCreate)
-            {
-                await _dialogs.ShowAlertAsync("Save Cancelled", "Entry was not saved because the records folder was not created.");
-                return false;
-            }
-
-            _storage.CreateRecordsDirectory();
+                "Save Cancelled",
+                "Entry was not saved because the records folder was not created."))
+        {
+            return false;
         }
 
         var date = (SelectedDate ?? DateTime.Today).Date;
         await _storage.SaveEntriesForDateAsync(date, WorkEntries.ToList());
+        return true;
+    }
+
+    private async Task<bool> EnsureRecordsDirectoryAsync(string confirmationMessage, string cancelTitle, string cancelMessage)
+    {
+        if (_dialogs is null)
+        {
+            return false;
+        }
+
+        if (_storage.RecordsDirectoryExists())
+        {
+            return true;
+        }
+
+        var shouldCreate = await _dialogs.ShowConfirmationAsync(
+            "Create Records Folder",
+            confirmationMessage,
+            "Create",
+            "Cancel");
+
+        if (!shouldCreate)
+        {
+            await _dialogs.ShowAlertAsync(cancelTitle, cancelMessage);
+            return false;
+        }
+
+        _storage.CreateRecordsDirectory();
         return true;
     }
 
