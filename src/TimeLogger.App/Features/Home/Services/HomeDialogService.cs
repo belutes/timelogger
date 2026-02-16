@@ -26,6 +26,12 @@ public sealed class HomeDialogService(Window owner) : IHomeDialogService
         return await dialog.ShowDialog<string?>(owner);
     }
 
+    public async Task<string?> ShowTextInputAsync(string title, string prompt, string watermark, string initialValue = "")
+    {
+        var dialog = new TextInputDialogWindow(title, prompt, watermark, initialValue);
+        return await dialog.ShowDialog<string?>(owner);
+    }
+
     public async Task<EditEntryInput?> ShowEditEntryAsync(WorkEntry entry, IReadOnlyList<string> timeOptions)
     {
         var dialog = new EditEntryDialogWindow(entry, timeOptions);

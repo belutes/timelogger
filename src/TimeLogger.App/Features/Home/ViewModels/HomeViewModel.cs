@@ -14,6 +14,7 @@ namespace TimeLogger.App.Features.Home.ViewModels;
 public sealed class HomeViewModel : ViewModelBase
 {
     private readonly ITimeLogStorageService _storage;
+    private readonly ICalendarService _calendarService;
     private IHomeDialogService? _dialogs;
 
     private DateTime? _selectedDate = DateTime.Today;
@@ -22,17 +23,20 @@ public sealed class HomeViewModel : ViewModelBase
     private string _selectedStartTime = string.Empty;
     private string _selectedEndTime = string.Empty;
     private string _totalDuration = "0h 0m";
+    private string _selectedCalendarRange = "Today";
     private WorkEntry? _selectedEntry;
     private string? _lastNonOtherTask;
     private bool _suppressTaskSelectionPrompt;
+    private bool _isUpdatingTimes;
+    private string? _lastCalendarError;
 
-    public HomeViewModel(ITimeLogStorageService storage)
+    public HomeViewModel(ITimeLogStorageService storage, ICalendarService calendarService)
     {
         _storage = storage;
+        _calendarService = calendarService;
 
         TimeOptions = new ObservableCollection<string>(BuildTimeOptions());
-        SelectedStartTime = "08:00 AM";
-        SelectedEndTime = "08:15 AM";
+        SetDefaultWorkdayTimes();
 
         TaskOptions = new ObservableCollection<string>
         {
@@ -48,37 +52,7 @@ public sealed class HomeViewModel : ViewModelBase
         _lastNonOtherTask = SelectedTask;
 
         WorkEntries = new ObservableCollection<WorkEntry>();
-        CalendarEvents = new ObservableCollection<CalendarEvent>
-        {
-            new CalendarEvent
-            {
-                Title = "Team Sync",
-                DateLine = "Sunday, February 15, 2026",
-                TimeRange = "09:00-09:30 AM",
-                Location = "Online"
-            },
-            new CalendarEvent
-            {
-                Title = "Focus Block",
-                DateLine = "Sunday, February 15, 2026",
-                TimeRange = "09:45-11:15 AM",
-                Location = "Desk"
-            },
-            new CalendarEvent
-            {
-                Title = "Team Sync",
-                DateLine = "Sunday, February 15, 2026",
-                TimeRange = "10:30-11:30 AM",
-                Location = "Online"
-            },
-            new CalendarEvent
-            {
-                Title = "Focus Block",
-                DateLine = "Sunday, February 15, 2026",
-                TimeRange = "11:15-12:45 AM",
-                Location = "Desk"
-            }
-        };
+        CalendarEvents = new ObservableCollection<CalEvent>();
 
         QuickRanges = new ObservableCollection<string>
         {
@@ -86,10 +60,12 @@ public sealed class HomeViewModel : ViewModelBase
             "This Week",
             "This Month"
         };
+        SelectedCalendarRange = QuickRanges[0];
 
         AddEntryCommand = new AsyncRelayCommand(AddEntryAsync);
         DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedAsync, CanDeleteSelected);
         EditSelectedEntryCommand = new AsyncRelayCommand(EditSelectedEntryAsync, CanDeleteSelected);
+        RefreshCalendarCommand = new AsyncRelayCommand(LoadCalendarEventsAsync);
     }
 
     public string HeaderTitle { get; } = "Daily Time Log";
@@ -103,7 +79,9 @@ public sealed class HomeViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(SelectedDateDisplay));
                 OnPropertyChanged(nameof(CalendarGroupLabel));
+                SetDefaultWorkdayTimes();
                 _ = LoadEntriesForSelectedDateAsync();
+                _ = LoadCalendarEventsAsync();
             }
         }
     }
@@ -116,7 +94,23 @@ public sealed class HomeViewModel : ViewModelBase
     public string SelectedStartTime
     {
         get => _selectedStartTime;
-        set => SetProperty(ref _selectedStartTime, value);
+        set
+        {
+            if (SetProperty(ref _selectedStartTime, value))
+            {
+                if (_isUpdatingTimes)
+                {
+                    return;
+                }
+
+                if (TryGetNextTimeOption(value, out var nextTime))
+                {
+                    _isUpdatingTimes = true;
+                    SelectedEndTime = nextTime;
+                    _isUpdatingTimes = false;
+                }
+            }
+        }
     }
 
     public string SelectedEndTime
@@ -169,17 +163,30 @@ public sealed class HomeViewModel : ViewModelBase
     public string EventCountLabel => $"{CalendarEvents.Count} event(s).";
     public string EntryCountLabel => $"{WorkEntries.Count} entries";
 
-    public ObservableCollection<CalendarEvent> CalendarEvents { get; }
+    public ObservableCollection<CalEvent> CalendarEvents { get; }
     public ObservableCollection<string> QuickRanges { get; }
+    public string SelectedCalendarRange
+    {
+        get => _selectedCalendarRange;
+        set
+        {
+            if (SetProperty(ref _selectedCalendarRange, value))
+            {
+                _ = LoadCalendarEventsAsync();
+            }
+        }
+    }
 
     public IAsyncRelayCommand AddEntryCommand { get; }
     public IAsyncRelayCommand DeleteSelectedCommand { get; }
     public IAsyncRelayCommand EditSelectedEntryCommand { get; }
+    public IAsyncRelayCommand RefreshCalendarCommand { get; }
 
     public void AttachDialogService(IHomeDialogService dialogs)
     {
         _dialogs = dialogs;
         _ = LoadEntriesForSelectedDateAsync();
+        _ = LoadCalendarEventsAsync();
     }
 
     private async Task HandleTaskSelectionChangedAsync(string? selectedTask)
@@ -266,6 +273,7 @@ public sealed class HomeViewModel : ViewModelBase
         }
 
         Notes = string.Empty;
+        AdvanceTimeAfterAdd(entry.End);
     }
 
     private async Task DeleteSelectedAsync()
@@ -377,6 +385,58 @@ public sealed class HomeViewModel : ViewModelBase
         SelectedEntry = null;
         RecalculateTotalDuration();
         OnPropertyChanged(nameof(EntryCountLabel));
+    }
+
+    private async Task LoadCalendarEventsAsync()
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var (start, endExclusive) = ResolveCalendarRange();
+            var events = await _calendarService.GetEventsAsync(start, endExclusive);
+
+            CalendarEvents.Clear();
+            foreach (var calendarEvent in events)
+            {
+                CalendarEvents.Add(calendarEvent);
+            }
+
+            _lastCalendarError = null;
+            OnPropertyChanged(nameof(EventCountLabel));
+        }
+        catch (Exception ex)
+        {
+            var message = $"Could not load Outlook events.\n\n{ex.Message}";
+            if (string.Equals(message, _lastCalendarError, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _lastCalendarError = message;
+            await _dialogs.ShowAlertAsync("Outlook Calendar", message);
+        }
+    }
+
+    private (DateTimeOffset start, DateTimeOffset endExclusive) ResolveCalendarRange()
+    {
+        var day = (SelectedDate ?? DateTime.Today).Date;
+        return SelectedCalendarRange switch
+        {
+            "This Week" => (StartOfWeek(day), StartOfWeek(day).AddDays(7)),
+            "This Month" =>
+                (new DateTimeOffset(new DateTime(day.Year, day.Month, 1)), new DateTimeOffset(new DateTime(day.Year, day.Month, 1).AddMonths(1))),
+            _ => (new DateTimeOffset(day), new DateTimeOffset(day.AddDays(1)))
+        };
+    }
+
+    private static DateTimeOffset StartOfWeek(DateTime day)
+    {
+        var delta = ((int)day.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return new DateTimeOffset(day.AddDays(-delta));
     }
 
     private async Task<bool> SaveCurrentDateEntriesAsync()
@@ -530,5 +590,49 @@ public sealed class HomeViewModel : ViewModelBase
         {
             yield return time.AddMinutes(i * 15).ToString("hh:mm tt");
         }
+    }
+
+    private void SetDefaultWorkdayTimes()
+    {
+        _isUpdatingTimes = true;
+        SelectedStartTime = "08:00 AM";
+        SelectedEndTime = "08:15 AM";
+        _isUpdatingTimes = false;
+    }
+
+    private void AdvanceTimeAfterAdd(TimeSpan endTime)
+    {
+        var nextStart = DateTime.Today.Add(endTime).ToString("hh:mm tt");
+
+        _isUpdatingTimes = true;
+        SelectedStartTime = nextStart;
+        _isUpdatingTimes = false;
+
+        if (TryGetNextTimeOption(nextStart, out var nextEnd))
+        {
+            SelectedEndTime = nextEnd;
+            return;
+        }
+
+        SelectedEndTime = nextStart;
+    }
+
+    private bool TryGetNextTimeOption(string current, out string next)
+    {
+        next = string.Empty;
+        var index = TimeOptions.IndexOf(current);
+        if (index < 0)
+        {
+            return false;
+        }
+
+        var nextIndex = index + 1;
+        if (nextIndex >= TimeOptions.Count)
+        {
+            return false;
+        }
+
+        next = TimeOptions[nextIndex];
+        return true;
     }
 }

@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TimeLogger.App.Features.Home.Views.Dialogs.TextInputDialogWindow"
+        Width="520"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="#242424"
+        Foreground="#F0F0F0"
+        Title="Input">
+  <StackPanel Margin="16" Spacing="10">
+    <TextBlock x:Name="PromptTextBlock" TextWrapping="Wrap" />
+    <TextBox x:Name="InputTextBox" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancelClicked" />
+      <Button Content="OK" Click="OnOkClicked" />
+    </StackPanel>
+  </StackPanel>
+</Window>
