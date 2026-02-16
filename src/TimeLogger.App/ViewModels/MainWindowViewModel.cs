@@ -6,11 +6,9 @@ namespace TimeLogger.App.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
-    public HomeViewModel Home { get; } = CreateHomeViewModel();
-    public DataAnalysisViewModel DataAnalysis { get; } = new();
-
-    private static HomeViewModel CreateHomeViewModel()
+    public MainWindowViewModel()
     {
+        var storage = new TimeLogStorageService();
         var config = CalendarConfigLoader.Load();
         ICalendarService calendarService;
 
@@ -23,6 +21,10 @@ public sealed class MainWindowViewModel : ViewModelBase
             calendarService = new GraphCalendarService(config);
         }
 
-        return new HomeViewModel(new TimeLogStorageService(), calendarService, new CsvTimeLogExportService());
+        Home = new HomeViewModel(storage, calendarService, new CsvTimeLogExportService());
+        DataAnalysis = new DataAnalysisViewModel(storage);
     }
+
+    public HomeViewModel Home { get; }
+    public DataAnalysisViewModel DataAnalysis { get; }
 }

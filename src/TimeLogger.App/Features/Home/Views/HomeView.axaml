@@ -10,8 +10,7 @@
              d:DesignWidth="1100"
              d:DesignHeight="700">
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid Margin="14,6,14,0" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
+  <Grid Margin="14,6,14,8" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
     <TextBlock Grid.ColumnSpan="2"
                Text="{Binding HeaderTitle}"
                HorizontalAlignment="Center"
@@ -65,8 +64,8 @@
                  FontWeight="SemiBold"/>
     </Grid>
 
-    <StackPanel Grid.Row="3" Grid.Column="0" Spacing="10">
-      <StackPanel Spacing="6">
+    <Grid Grid.Row="3" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
+      <StackPanel Grid.Row="0" Spacing="6">
         <TextBlock Text="Task" FontWeight="SemiBold" />
         <ComboBox ItemsSource="{Binding TaskOptions}"
                   SelectedItem="{Binding SelectedTask}"
@@ -74,7 +73,7 @@
                   HorizontalAlignment="Stretch"/>
       </StackPanel>
 
-      <StackPanel Spacing="6">
+      <StackPanel Grid.Row="1" Spacing="6">
         <TextBlock Text="Notes" FontWeight="SemiBold" />
         <TextBox Height="130"
                  Text="{Binding Notes}"
@@ -85,12 +84,12 @@
                  HorizontalAlignment="Stretch"/>
       </StackPanel>
 
-      <StackPanel Orientation="Horizontal" Spacing="10">
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
         <Button Content="Add Entry" Classes="pill" Command="{Binding AddEntryCommand}"/>
         <Button Content="Delete Selected" Classes="pill" Command="{Binding DeleteSelectedCommand}"/>
       </StackPanel>
 
-      <Border Background="#1F1F1F" CornerRadius="10" Padding="10" Height="165">
+      <Border Grid.Row="3" Background="#1F1F1F" CornerRadius="10" Padding="10">
         <ListBox ItemsSource="{Binding WorkEntries}"
                  SelectedItem="{Binding SelectedEntry}"
                  Background="#2A2A2A"
@@ -112,17 +111,17 @@
         </ListBox>
       </Border>
 
-      <TextBlock Text="{Binding EntryCountLabel}" FontWeight="SemiBold"/>
-    </StackPanel>
+      <TextBlock Grid.Row="4" Text="{Binding EntryCountLabel}" FontWeight="SemiBold"/>
+    </Grid>
 
     <Border Grid.Row="3"
             Grid.Column="1"
             Background="#2A2A2A"
             CornerRadius="10"
             Padding="12"
-            VerticalAlignment="Top"
+            VerticalAlignment="Stretch"
             Margin="0,0,0,0">
-      <StackPanel Spacing="10">
+      <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
           <TextBlock Text="Outlook Calendar" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
 
@@ -137,9 +136,9 @@
                   Command="{Binding RefreshCalendarCommand}" />
         </Grid>
 
-        <TextBlock Text="{Binding CalendarGroupLabel}" FontStyle="Italic" Opacity="0.95"/>
+        <TextBlock Grid.Row="1" Text="{Binding CalendarGroupLabel}" FontStyle="Italic" Opacity="0.95"/>
 
-        <ScrollViewer Height="420" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
           <ItemsControl ItemsSource="{Binding CalendarEvents}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="models:CalEvent">
@@ -156,9 +155,8 @@
           </ItemsControl>
         </ScrollViewer>
 
-        <TextBlock Text="{Binding EventCountLabel}" FontWeight="SemiBold" />
-      </StackPanel>
+        <TextBlock Grid.Row="3" Text="{Binding EventCountLabel}" FontWeight="SemiBold" />
+      </Grid>
     </Border>
-    </Grid>
-  </ScrollViewer>
+  </Grid>
 </UserControl>
