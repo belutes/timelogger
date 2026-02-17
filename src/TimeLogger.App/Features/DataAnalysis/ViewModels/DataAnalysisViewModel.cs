@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using TimeLogger.App.Features.DataAnalysis.Models;
 using TimeLogger.App.Features.Home.Models;
 using TimeLogger.App.Features.Home.Services;
@@ -11,6 +13,9 @@ namespace TimeLogger.App.Features.DataAnalysis.ViewModels;
 
 public sealed class DataAnalysisViewModel : ViewModelBase
 {
+    private const double PieRadius = 105d;
+    private const double PieCenter = 105d;
+
     private static readonly string[] PieColors =
     [
         "#7398E6",
@@ -22,6 +27,7 @@ public sealed class DataAnalysisViewModel : ViewModelBase
     ];
 
     private readonly ITimeLogStorageService _storage;
+    private readonly SemaphoreSlim _refreshGate = new(1, 1);
 
     private DateTime _analysisDate = DateTime.Today;
     private string _selectedDetailRange = "Day";
@@ -39,6 +45,7 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         };
 
         DayBreakdown = new ObservableCollection<ActivityBreakdownItem>();
+        PieSlices = new ObservableCollection<PieSliceItem>();
         DetailItems = new ObservableCollection<ActivityBreakdownItem>();
         BarItems = new ObservableCollection<ActivityBreakdownItem>();
 
@@ -50,6 +57,7 @@ public sealed class DataAnalysisViewModel : ViewModelBase
 
     public ObservableCollection<string> DetailRangeOptions { get; }
     public ObservableCollection<ActivityBreakdownItem> DayBreakdown { get; }
+    public ObservableCollection<PieSliceItem> PieSlices { get; }
     public ObservableCollection<ActivityBreakdownItem> DetailItems { get; }
     public ObservableCollection<ActivityBreakdownItem> BarItems { get; }
 
@@ -107,9 +115,6 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         }
     }
 
-    public string PiePrimaryPercentText => DayBreakdown.Count > 0 ? DayBreakdown[0].PercentText : "0%";
-    public string PieSecondaryPercentText => DayBreakdown.Count > 1 ? DayBreakdown[1].PercentText : "0%";
-
     public string TotalDurationText
     {
         get
@@ -127,25 +132,18 @@ public sealed class DataAnalysisViewModel : ViewModelBase
 
     private async System.Threading.Tasks.Task InitializeAsync()
     {
+        await RefreshAsync();
+    }
+
+    public async System.Threading.Tasks.Task RefreshAsync()
+    {
+        await _refreshGate.WaitAsync();
         try
         {
-            if (_storage.RecordsDirectoryExists())
-            {
-                var now = DateTime.Today;
-                var allRecentEntries = await _storage.LoadEntriesInRangeAsync(now.AddYears(-2), now);
-                var latestDate = allRecentEntries
-                    .OrderByDescending(item => item.Date)
-                    .Select(item => item.Date.Date)
-                    .FirstOrDefault();
-
-                if (latestDate != default)
-                {
-                    _analysisDate = latestDate;
-                    OnPropertyChanged(nameof(DayTitle));
-                    OnPropertyChanged(nameof(DetailHeading));
-                    OnPropertyChanged(nameof(BarHeading));
-                }
-            }
+            _analysisDate = await ResolveLatestAnalysisDateAsync(_analysisDate.Date);
+            OnPropertyChanged(nameof(DayTitle));
+            OnPropertyChanged(nameof(DetailHeading));
+            OnPropertyChanged(nameof(BarHeading));
 
             await RefreshDayBreakdownAsync();
             await RefreshDetailItemsAsync();
@@ -154,11 +152,14 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         catch
         {
             DayBreakdown.Clear();
+            PieSlices.Clear();
             DetailItems.Clear();
             BarItems.Clear();
-            OnPropertyChanged(nameof(PiePrimaryPercentText));
-            OnPropertyChanged(nameof(PieSecondaryPercentText));
             OnPropertyChanged(nameof(TotalDurationText));
+        }
+        finally
+        {
+            _refreshGate.Release();
         }
     }
 
@@ -177,15 +178,14 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         try
         {
             var entries = await _storage.LoadEntriesForDateAsync(_analysisDate.Date);
-            SetCollection(DayBreakdown, BuildItemsFromEntries(entries, PieColors));
-            OnPropertyChanged(nameof(PiePrimaryPercentText));
-            OnPropertyChanged(nameof(PieSecondaryPercentText));
+            var dayItems = BuildItemsFromEntries(entries, PieColors);
+            SetCollection(DayBreakdown, dayItems);
+            SetCollection(PieSlices, BuildPieSlices(dayItems));
         }
         catch
         {
             DayBreakdown.Clear();
-            OnPropertyChanged(nameof(PiePrimaryPercentText));
-            OnPropertyChanged(nameof(PieSecondaryPercentText));
+            PieSlices.Clear();
         }
     }
 
@@ -220,6 +220,23 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         {
             BarItems.Clear();
         }
+    }
+
+    private async System.Threading.Tasks.Task<DateTime> ResolveLatestAnalysisDateAsync(DateTime fallbackDate)
+    {
+        if (!_storage.RecordsDirectoryExists())
+        {
+            return fallbackDate.Date;
+        }
+
+        var now = DateTime.Today;
+        var allRecentEntries = await _storage.LoadEntriesInRangeAsync(now.AddYears(-2), now);
+        var latestDate = allRecentEntries
+            .OrderByDescending(item => item.Date)
+            .Select(item => item.Date.Date)
+            .FirstOrDefault();
+
+        return latestDate == default ? fallbackDate.Date : latestDate;
     }
 
     private static (DateTime start, DateTime endInclusive) ResolveDetailRange(DateTime anchorDate, string range)
@@ -283,6 +300,74 @@ public sealed class DataAnalysisViewModel : ViewModelBase
         }
 
         return results;
+    }
+
+    private static IReadOnlyList<PieSliceItem> BuildPieSlices(IReadOnlyList<ActivityBreakdownItem> items)
+    {
+        if (items.Count == 0)
+        {
+            return [];
+        }
+
+        var slices = new List<PieSliceItem>(items.Count);
+        var startAngle = -90d;
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            var isLast = i == items.Count - 1;
+            var requestedSweep = isLast
+                ? 360d - (startAngle + 90d)
+                : 360d * items[i].Percentage / 100d;
+            var sweepAngle = Math.Clamp(requestedSweep, 0d, 360d);
+
+            if (sweepAngle < 0.01d)
+            {
+                continue;
+            }
+
+            slices.Add(new PieSliceItem
+            {
+                ColorHex = items[i].ColorHex,
+                PathData = sweepAngle >= 359.99d
+                    ? BuildFullCirclePath()
+                    : BuildPieSlicePath(startAngle, sweepAngle)
+            });
+
+            startAngle += sweepAngle;
+        }
+
+        return slices;
+    }
+
+    private static string BuildPieSlicePath(double startAngle, double sweepAngle)
+    {
+        var startRadians = DegreesToRadians(startAngle);
+        var endRadians = DegreesToRadians(startAngle + sweepAngle);
+
+        var startX = PieCenter + (PieRadius * Math.Cos(startRadians));
+        var startY = PieCenter + (PieRadius * Math.Sin(startRadians));
+        var endX = PieCenter + (PieRadius * Math.Cos(endRadians));
+        var endY = PieCenter + (PieRadius * Math.Sin(endRadians));
+        var largeArc = sweepAngle > 180d ? 1 : 0;
+
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"M {PieCenter:0.###},{PieCenter:0.###} L {startX:0.###},{startY:0.###} A {PieRadius:0.###},{PieRadius:0.###} 0 {largeArc} 1 {endX:0.###},{endY:0.###} Z");
+    }
+
+    private static string BuildFullCirclePath()
+    {
+        var topY = PieCenter - PieRadius;
+        var bottomY = PieCenter + PieRadius;
+
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"M {PieCenter:0.###},{PieCenter:0.###} L {PieCenter:0.###},{topY:0.###} A {PieRadius:0.###},{PieRadius:0.###} 0 1 1 {PieCenter:0.###},{bottomY:0.###} A {PieRadius:0.###},{PieRadius:0.###} 0 1 1 {PieCenter:0.###},{topY:0.###} Z");
+    }
+
+    private static double DegreesToRadians(double angle)
+    {
+        return angle * Math.PI / 180d;
     }
 
     private static void SetCollection<T>(ObservableCollection<T> target, IReadOnlyList<T> source)

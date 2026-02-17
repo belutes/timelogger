@@ -62,21 +62,22 @@
             </StackPanel>
 
             <Grid Grid.Column="1" Width="230" Height="230" HorizontalAlignment="Right" VerticalAlignment="Center">
-              <Ellipse Width="210" Height="210" Fill="#7398E6" />
-              <Path Fill="#5CB978" Data="M 115 115 L 115 10 A 105 105 0 0 0 30 177 Z" />
-              <Ellipse Width="210" Height="210" Stroke="#E7E7E7" StrokeThickness="1" Fill="Transparent" />
+              <Grid Width="210" Height="210" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ItemsControl Width="210" Height="210" ItemsSource="{Binding PieSlices}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <Canvas />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:PieSliceItem">
+                      <Path Data="{Binding PathData}" Fill="{Binding ColorHex}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-              <TextBlock Text="{Binding PieSecondaryPercentText}"
-                         FontWeight="SemiBold"
-                         HorizontalAlignment="Left"
-                         VerticalAlignment="Center"
-                         Margin="36,0,0,16" />
-
-              <TextBlock Text="{Binding PiePrimaryPercentText}"
-                         FontWeight="SemiBold"
-                         HorizontalAlignment="Right"
-                         VerticalAlignment="Center"
-                         Margin="0,0,36,-45" />
+                <Ellipse Width="210" Height="210" Stroke="#E7E7E7" StrokeThickness="1" Fill="Transparent" />
+              </Grid>
             </Grid>
           </Grid>
 

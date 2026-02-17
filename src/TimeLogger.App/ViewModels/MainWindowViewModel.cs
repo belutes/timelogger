@@ -6,6 +6,8 @@ namespace TimeLogger.App.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
+    private int _selectedTabIndex;
+
     public MainWindowViewModel()
     {
         var storage = new TimeLogStorageService();
@@ -27,4 +29,16 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public HomeViewModel Home { get; }
     public DataAnalysisViewModel DataAnalysis { get; }
+
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set
+        {
+            if (SetProperty(ref _selectedTabIndex, value) && value == 1)
+            {
+                _ = DataAnalysis.RefreshAsync();
+            }
+        }
+    }
 }
