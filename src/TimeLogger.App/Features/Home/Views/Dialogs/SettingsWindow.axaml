@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TimeLogger.App.Features.Home.Views.Dialogs.SettingsWindow"
+        Width="520" Height="620" MinWidth="430" MinHeight="480" Title="Settings"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="22" RowSpacing="12">
+    <StackPanel Spacing="4">
+      <TextBlock Text="Settings" FontSize="23" FontWeight="Bold" />
+      <TextBlock Text="Make your workspace your own." Foreground="{DynamicResource MutedBrush}" />
+    </StackPanel>
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+      <StackPanel Spacing="3">
+        <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock Text="Choose how the app looks." Foreground="{DynamicResource MutedBrush}" />
+      </StackPanel>
+      <ComboBox Grid.Column="1" x:Name="ThemePicker" Width="120" VerticalAlignment="Center">
+        <ComboBoxItem Content="Dark"/><ComboBoxItem Content="Light"/><ComboBoxItem Content="System"/>
+      </ComboBox>
+    </Grid>
+    <StackPanel Grid.Row="2" Spacing="4" Margin="0,6,0,0">
+      <TextBlock Text="Task titles" FontSize="16" FontWeight="SemiBold" />
+      <TextBlock Text="Changes apply to new entries. Existing records keep their original titles." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+    </StackPanel>
+    <Border Grid.Row="3" Background="{DynamicResource CardBrush}" CornerRadius="10" Padding="8">
+      <ListBox x:Name="TasksList" Background="Transparent" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+    </Border>
+    <StackPanel Grid.Row="4" Spacing="6">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <TextBox x:Name="NewTaskBox" Watermark="New task title" />
+        <Button Grid.Column="1" Content="Add" Click="OnAddClicked" />
+        <Button Grid.Column="2" Content="Remove selected" Click="OnRemoveClicked" />
+      </Grid>
+      <TextBlock x:Name="ErrorText" Foreground="#D94949" TextWrapping="Wrap" IsVisible="False" />
+    </StackPanel>
+    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancelClicked" />
+      <Button Content="Save settings" Click="OnSaveClicked" />
+    </StackPanel>
+  </Grid>
+</Window>

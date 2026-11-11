@@ -12,33 +12,33 @@
 
   <UserControl.Styles>
     <Style Selector="Button.mode-btn">
-      <Setter Property="Background" Value="#5A5A5A" />
-      <Setter Property="BorderBrush" Value="#5A5A5A" />
-      <Setter Property="Foreground" Value="#ECECEC" />
+      <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CardBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
       <Setter Property="Padding" Value="10,4" />
       <Setter Property="CornerRadius" Value="6" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
     <Style Selector="Button.mode-btn.selected-mode">
-      <Setter Property="Background" Value="#3B82F6" />
-      <Setter Property="BorderBrush" Value="#3B82F6" />
-      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
     </Style>
 
     <Style Selector="ProgressBar.analysis-bar">
       <Setter Property="Height" Value="18" />
       <Setter Property="Maximum" Value="100" />
-      <Setter Property="Foreground" Value="#3B82F6" />
-      <Setter Property="Background" Value="#8A8A8A" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Background" Value="{DynamicResource LineBrush}" />
     </Style>
   </UserControl.Styles>
 
   <Grid Margin="16,10,16,8" ColumnDefinitions="1*,1.15*" ColumnSpacing="18">
       <Border Grid.Column="0"
-              Background="#343434"
-              CornerRadius="10"
-              Padding="12"
+              Background="{DynamicResource SurfaceBrush}"
+              CornerRadius="14"
+              Padding="18"
               VerticalAlignment="Stretch">
         <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
           <TextBlock Text="{Binding DayTitle}"
@@ -76,12 +76,12 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <Ellipse Width="210" Height="210" Stroke="#E7E7E7" StrokeThickness="1" Fill="Transparent" />
+                <Ellipse Width="210" Height="210" Stroke="{DynamicResource LineBrush}" StrokeThickness="1" Fill="Transparent" />
               </Grid>
             </Grid>
           </Grid>
 
-          <Border Grid.Row="2" Height="1" Background="#E2E2E2" Margin="0,0,0,2" />
+          <Border Grid.Row="2" Height="1" Background="{DynamicResource LineBrush}" Margin="0,0,0,2" />
 
           <StackPanel Grid.Row="3" Spacing="8">
             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -114,9 +114,9 @@
       </Border>
 
       <Border Grid.Column="1"
-              Background="#343434"
-              CornerRadius="10"
-              Padding="12"
+              Background="{DynamicResource SurfaceBrush}"
+              CornerRadius="14"
+              Padding="18"
               VerticalAlignment="Stretch">
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
           <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
@@ -137,7 +137,7 @@
             <ItemsControl ItemsSource="{Binding DetailItems}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:ActivityBreakdownItem">
-                  <Border Background="#3C3C3C" CornerRadius="7" Padding="10" Margin="0,0,0,8">
+                  <Border Background="{DynamicResource CardBrush}" CornerRadius="7" Padding="10" Margin="0,0,0,8">
                     <Grid ColumnDefinitions="*,Auto">
                       <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="17" />
                       <TextBlock Grid.Column="1" Text="{Binding DurationText}" FontWeight="SemiBold" FontSize="17" />
@@ -148,7 +148,7 @@
             </ItemsControl>
           </ScrollViewer>
 
-          <Border Grid.Row="3" Background="#3C3C3C" CornerRadius="7" Padding="10">
+          <Border Grid.Row="3" Background="{DynamicResource CardBrush}" CornerRadius="7" Padding="10">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Text="Total" FontWeight="SemiBold" FontSize="17" />
               <TextBlock Grid.Column="1" Text="{Binding TotalDurationText}" FontWeight="SemiBold" FontSize="17" />

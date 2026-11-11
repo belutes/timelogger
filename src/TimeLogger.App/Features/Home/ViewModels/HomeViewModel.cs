@@ -1,5 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
 using CommunityToolkit.Mvvm.Input;
 using TimeLogger.App.Features.Home.Models;
 using TimeLogger.App.Features.Home.Services;
@@ -25,6 +27,7 @@ public sealed partial class HomeViewModel : ViewModelBase
     private string? _lastNonOtherTask;
     private bool _suppressTaskSelectionPrompt;
     private bool _isUpdatingTimes;
+    private HashSet<string> _configuredTaskTitles = new(StringComparer.OrdinalIgnoreCase);
     private string? _lastCalendarError;
 
     public HomeViewModel(
@@ -49,6 +52,7 @@ public sealed partial class HomeViewModel : ViewModelBase
             "Other"
         };
 
+        _configuredTaskTitles = new HashSet<string>(TaskOptions.Where(x => x != "Other"), StringComparer.OrdinalIgnoreCase);
         SelectedTask = TaskOptions[0];
         _lastNonOtherTask = SelectedTask;
 
@@ -69,6 +73,24 @@ public sealed partial class HomeViewModel : ViewModelBase
         RefreshCalendarCommand = new AsyncRelayCommand(LoadCalendarEventsAsync);
         ExportDayCsvCommand = new AsyncRelayCommand(ExportDayCsvAsync);
         ExportRangeCsvCommand = new AsyncRelayCommand(ExportRangeCsvAsync);
+    }
+
+    public void SetTaskTitles(IEnumerable<string> titles)
+    {
+        var previous = SelectedTask;
+        var temporaryChoices = TaskOptions.Where(x => x.StartsWith("Other - ", StringComparison.Ordinal) && !_configuredTaskTitles.Contains(x)).ToList();
+        var configured = titles.ToList();
+        _configuredTaskTitles = new HashSet<string>(configured, StringComparer.OrdinalIgnoreCase);
+        _suppressTaskSelectionPrompt = true;
+        TaskOptions.Clear();
+        foreach (var title in configured) TaskOptions.Add(title);
+        foreach (var custom in temporaryChoices)
+            if (!TaskOptions.Contains(custom)) TaskOptions.Add(custom);
+        TaskOptions.Add("Other");
+        SelectedTask = previous is not null && TaskOptions.Contains(previous) && previous != "Other"
+            ? previous : TaskOptions.FirstOrDefault(x => x != "Other");
+        _lastNonOtherTask = SelectedTask;
+        _suppressTaskSelectionPrompt = false;
     }
 
     public string HeaderTitle { get; } = "Daily Time Log";

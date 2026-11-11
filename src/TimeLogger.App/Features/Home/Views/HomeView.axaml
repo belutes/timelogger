@@ -10,21 +10,20 @@
              d:DesignWidth="1100"
              d:DesignHeight="700">
 
-  <Grid Margin="14,6,14,8" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
-    <TextBlock Grid.ColumnSpan="2"
-               Text="{Binding HeaderTitle}"
-               HorizontalAlignment="Center"
-               FontSize="20"
-               FontWeight="Bold"
-               Margin="0,2,0,0" />
+  <Grid Margin="14,6,14,8" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,*" ColumnSpacing="14" RowSpacing="10">
+    <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" Margin="0,4,0,2">
+      <StackPanel Spacing="2">
+        <TextBlock Text="Your workday" FontSize="22" FontWeight="Bold" />
+        <TextBlock Text="Log your time and keep your schedule close." Foreground="{DynamicResource MutedBrush}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+        <Button Content="Export day" Classes="pill" Command="{Binding ExportDayCsvCommand}"/>
+        <Button Content="Export range" Classes="pill" Command="{Binding ExportRangeCsvCommand}"/>
+      </StackPanel>
+    </Grid>
 
-    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-      <Button Content="Export Day CSV" Classes="pill" Command="{Binding ExportDayCsvCommand}"/>
-      <Button Content="Export Range CSV" Classes="pill" Command="{Binding ExportRangeCsvCommand}"/>
-    </StackPanel>
-
-    <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
-      <Border Background="#2C2C2C"
+    <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*,Auto,Auto,*,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+      <Border Background="{DynamicResource CardBrush}"
               CornerRadius="4"
               Padding="8,4"
               PointerPressed="OnDateContainerPressed">
@@ -64,9 +63,9 @@
                  FontWeight="SemiBold"/>
     </Grid>
 
-    <Grid Grid.Row="3" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
+    <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
       <StackPanel Grid.Row="0" Spacing="6">
-        <TextBlock Text="Task" FontWeight="SemiBold" />
+        <TextBlock Text="TASK" FontSize="11" Foreground="{DynamicResource MutedBrush}" FontWeight="Bold" />
         <ComboBox ItemsSource="{Binding TaskOptions}"
                   SelectedItem="{Binding SelectedTask}"
                   Height="34"
@@ -74,7 +73,7 @@
       </StackPanel>
 
       <StackPanel Grid.Row="1" Spacing="6">
-        <TextBlock Text="Notes" FontWeight="SemiBold" />
+        <TextBlock Text="NOTES" FontSize="11" Foreground="{DynamicResource MutedBrush}" FontWeight="Bold" />
         <TextBox Height="130"
                  Text="{Binding Notes}"
                  TextWrapping="Wrap"
@@ -85,20 +84,20 @@
       </StackPanel>
 
       <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10">
-        <Button Content="Add Entry" Classes="pill" Command="{Binding AddEntryCommand}"/>
-        <Button Content="Delete Selected" Classes="pill" Command="{Binding DeleteSelectedCommand}"/>
+        <Button Content="+  Add entry" Classes="pill primary" Command="{Binding AddEntryCommand}"/>
+        <Button Content="Delete selected" Classes="pill" Command="{Binding DeleteSelectedCommand}"/>
       </StackPanel>
 
-      <Border Grid.Row="3" Background="#1F1F1F" CornerRadius="10" Padding="10">
+      <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" CornerRadius="14" Padding="10">
         <ListBox ItemsSource="{Binding WorkEntries}"
                  SelectedItem="{Binding SelectedEntry}"
-                 Background="#2A2A2A"
+                 Background="{DynamicResource SurfaceBrush}"
                  BorderThickness="0"
                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                  DoubleTapped="OnEntriesListDoubleTapped">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="models:WorkEntry">
-              <Border Padding="10" Margin="0,0,0,8" Background="#343434" CornerRadius="8">
+              <Border Padding="10" Margin="0,0,0,8" Background="{DynamicResource CardBrush}" CornerRadius="8">
                 <StackPanel Spacing="4">
                   <TextBlock Text="{Binding Task}" FontWeight="SemiBold" FontSize="14"/>
                   <TextBlock Text="{Binding DateLabel}"/>
@@ -114,11 +113,11 @@
       <TextBlock Grid.Row="4" Text="{Binding EntryCountLabel}" FontWeight="SemiBold"/>
     </Grid>
 
-    <Border Grid.Row="3"
+    <Border Grid.Row="2"
             Grid.Column="1"
-            Background="#2A2A2A"
-            CornerRadius="10"
-            Padding="12"
+            Background="{DynamicResource SurfaceBrush}"
+            CornerRadius="14"
+            Padding="18"
             VerticalAlignment="Stretch"
             Margin="0,0,0,0">
       <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
@@ -142,12 +141,13 @@
           <ItemsControl ItemsSource="{Binding CalendarEvents}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="models:CalEvent">
-                <Border Background="#383838" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                <Border Background="{DynamicResource CardBrush}" CornerRadius="8" Padding="10" Margin="0,0,0,10">
                   <StackPanel Spacing="2">
-                    <TextBlock Text="{Binding Subject}" FontSize="20" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Subject}" FontSize="16" FontWeight="SemiBold"/>
                     <TextBlock Text="{Binding DateLine}"/>
                     <TextBlock Text="{Binding TimeRange}"/>
                     <TextBlock Text="{Binding Location}" Opacity="0.85"/>
+                    <Button Content="View details  →" Classes="pill" Click="OnMeetingDetailsClicked" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                   </StackPanel>
                 </Border>
               </DataTemplate>

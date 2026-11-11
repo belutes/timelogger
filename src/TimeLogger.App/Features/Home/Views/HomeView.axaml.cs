@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using TimeLogger.App.Features.Home.Services;
+using TimeLogger.App.Features.Home.Models;
+using TimeLogger.App.Features.Home.Views.Dialogs;
 using TimeLogger.App.Features.Home.ViewModels;
 
 namespace TimeLogger.App.Features.Home.Views;
@@ -45,6 +47,12 @@ public partial class HomeView : UserControl
             viewModel.AttachDialogService(new HomeDialogService(owner));
             _servicesAttached = true;
         }
+    }
+
+    private async void OnMeetingDetailsClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: CalEvent meeting } && TopLevel.GetTopLevel(this) is Window owner)
+            await new MeetingDetailsWindow(meeting).ShowDialog(owner);
     }
 
     private async void OnEntriesListDoubleTapped(object? sender, TappedEventArgs e)

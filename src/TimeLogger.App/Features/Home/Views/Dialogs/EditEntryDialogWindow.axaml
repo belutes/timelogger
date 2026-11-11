@@ -5,8 +5,8 @@
         Height="380"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="#242424"
-        Foreground="#F0F0F0"
+        Background="{DynamicResource SurfaceBrush}"
+        Foreground="{DynamicResource TextBrush}"
         Title="Edit Entry">
   <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" RowSpacing="10">
     <TextBlock Text="Task" FontWeight="SemiBold" />
