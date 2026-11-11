@@ -5,8 +5,8 @@
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="#242424"
-        Foreground="#F0F0F0"
+        Background="{DynamicResource SurfaceBrush}"
+        Foreground="{DynamicResource TextBrush}"
         Title="Custom Task">
   <StackPanel Margin="16" Spacing="10">
     <TextBlock Text="Enter custom task name" FontWeight="SemiBold" />

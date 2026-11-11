@@ -1,67 +1,63 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:TimeLogger.App.ViewModels"
         xmlns:home="using:TimeLogger.App.Features.Home.Views"
         xmlns:analysis="using:TimeLogger.App.Features.DataAnalysis.Views"
-        mc:Ignorable="d"
         x:Class="TimeLogger.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Width="1180"
-        Height="760"
-        MinWidth="980"
-        MinHeight="640"
-        Title="Daily Time Log"
-        Background="#000000"
-        Foreground="#F0F0F0">
-
+        Width="1180" Height="800" MinWidth="980" MinHeight="640"
+        Title="Daily Time Log" Background="{DynamicResource PageBrush}" Foreground="{DynamicResource TextBrush}">
   <Window.Styles>
     <Style Selector="TabControl#MainTabs TabStrip">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Margin" Value="18,6,0,0" />
+      <Setter Property="Margin" Value="22,0,0,0" />
     </Style>
-
     <Style Selector="TabItem">
-      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontSize" Value="14" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0,0,18,0" />
-      <Setter Property="Foreground" Value="#A9A9A9" />
+      <Setter Property="Padding" Value="14,10" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
-
     <Style Selector="TabItem:selected">
-      <Setter Property="Foreground" Value="#F4F4F4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
     </Style>
-
     <Style Selector="Button.pill">
-      <Setter Property="Background" Value="#4A4A4A" />
-      <Setter Property="Foreground" Value="#F5F5F5" />
-      <Setter Property="BorderBrush" Value="#4A4A4A" />
+      <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="14,8" />
       <Setter Property="FontSize" Value="13" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
-
-    <Style Selector="TextBlock">
-      <Setter Property="FontSize" Value="13" />
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
-
-    <Style Selector="ComboBox, TextBox, DatePicker, CalendarDatePicker">
-      <Setter Property="FontSize" Value="13" />
-    </Style>
+    <Style Selector="TextBlock"><Setter Property="FontSize" Value="13" /></Style>
+    <Style Selector="ComboBox, TextBox, DatePicker, CalendarDatePicker"><Setter Property="FontSize" Value="13" /></Style>
   </Window.Styles>
-
-  <TabControl Name="MainTabs" Margin="8,0,8,8" SelectedIndex="{Binding SelectedTabIndex}">
-    <TabItem Header="Home">
-      <home:HomeView DataContext="{Binding Home}" />
-    </TabItem>
-    <TabItem Header="Data Analysis">
-      <analysis:DataAnalysisView DataContext="{Binding DataAnalysis}" />
-    </TabItem>
-  </TabControl>
+  <Grid RowDefinitions="Auto,*">
+    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1" Padding="24,16">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+        <Border Background="{DynamicResource AccentBrush}" CornerRadius="10" Width="42" Height="42">
+          <TextBlock Text="◷" Foreground="{DynamicResource AccentTextBrush}" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Text="DAILY TIME LOG" FontSize="16" FontWeight="Bold" />
+          <TextBlock Text="Your workday, in focus" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+        </StackPanel>
+        <Button Grid.Column="2" x:Name="ThemeButton" Classes="pill" Content="☀  Light mode" Click="OnThemeToggleClicked" VerticalAlignment="Center" />
+        <Button Grid.Column="3" Classes="pill" Content="⚙  Settings" Click="OnSettingsClicked" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <TabControl Grid.Row="1" Name="MainTabs" Margin="8,6,8,8" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabItem Header="Time log"><home:HomeView DataContext="{Binding Home}" /></TabItem>
+      <TabItem Header="Insights"><analysis:DataAnalysisView DataContext="{Binding DataAnalysis}" /></TabItem>
+    </TabControl>
+  </Grid>
 </Window>

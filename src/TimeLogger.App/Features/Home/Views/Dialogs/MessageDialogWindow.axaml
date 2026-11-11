@@ -5,8 +5,8 @@
         SizeToContent="Height"
         CanResize="False"
         WindowStartupLocation="CenterOwner"
-        Background="#242424"
-        Foreground="#F0F0F0"
+        Background="{DynamicResource SurfaceBrush}"
+        Foreground="{DynamicResource TextBrush}"
         Title="Message">
   <StackPanel Margin="16" Spacing="12">
     <TextBlock x:Name="MessageTextBlock" TextWrapping="Wrap" />
