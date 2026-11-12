@@ -10,18 +10,39 @@ public sealed partial class HomeViewModel
 {
     private async Task LoadEntriesForSelectedDateAsync()
     {
+        var version = ++_entriesLoadVersion;
+        _entriesReady = false;
+        AddEntryCommand.NotifyCanExecuteChanged();
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+        EditSelectedEntryCommand.NotifyCanExecuteChanged();
         var date = (SelectedDate ?? DateTime.Today).Date;
-        var loadedEntries = await _storage.LoadEntriesForDateAsync(date);
-
         WorkEntries.Clear();
-        foreach (var entry in loadedEntries.OrderBy(item => item.Start))
-        {
-            WorkEntries.Add(entry);
-        }
-
         SelectedEntry = null;
         RecalculateTotalDuration();
         OnPropertyChanged(nameof(EntryCountLabel));
+        try
+        {
+            var loadedEntries = await _storage.LoadEntriesForDateAsync(date);
+            if (version != _entriesLoadVersion) return;
+            foreach (var entry in loadedEntries.OrderBy(item => item.Start)) WorkEntries.Add(entry);
+            RecalculateTotalDuration();
+            OnPropertyChanged(nameof(EntryCountLabel));
+            _entriesReady = true;
+        }
+        catch (Exception ex)
+        {
+            if (version == _entriesLoadVersion && _dialogs is not null)
+                await _dialogs.ShowAlertAsync("Could not load time entries", $"Entries cannot be changed until this day's records can be loaded. {ex.Message}");
+        }
+        finally
+        {
+            if (version == _entriesLoadVersion)
+            {
+                AddEntryCommand.NotifyCanExecuteChanged();
+                DeleteSelectedCommand.NotifyCanExecuteChanged();
+                EditSelectedEntryCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
     private async Task LoadCalendarEventsAsync()
@@ -31,11 +52,15 @@ public sealed partial class HomeViewModel
             return;
         }
 
+        var version = ++_calendarLoadVersion;
+        CalendarEvents.Clear();
+        OnPropertyChanged(nameof(EventCountLabel));
         try
         {
             var (start, endExclusive) = ResolveCalendarRange();
             var events = await _calendarService.GetEventsAsync(start, endExclusive);
 
+            if (version != _calendarLoadVersion) return;
             CalendarEvents.Clear();
             foreach (var calendarEvent in events)
             {
@@ -47,6 +72,7 @@ public sealed partial class HomeViewModel
         }
         catch (Exception ex)
         {
+            if (version != _calendarLoadVersion) return;
             var message = $"Could not load Outlook events.\n\n{ex.Message}";
             if (string.Equals(message, _lastCalendarError, StringComparison.Ordinal))
             {
@@ -179,8 +205,8 @@ public sealed partial class HomeViewModel
         var day = (SelectedDate ?? DateTime.Today).Date;
         return SelectedCalendarRange switch
         {
-            "This Week" => (StartOfWeek(day), StartOfWeek(day).AddDays(7)),
-            "This Month" =>
+            "Week" => (StartOfWeek(day), StartOfWeek(day).AddDays(7)),
+            "Month" =>
                 (new DateTimeOffset(new DateTime(day.Year, day.Month, 1)), new DateTimeOffset(new DateTime(day.Year, day.Month, 1).AddMonths(1))),
             _ => (new DateTimeOffset(day), new DateTimeOffset(day.AddDays(1)))
         };

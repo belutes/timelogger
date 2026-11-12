@@ -55,6 +55,27 @@ public partial class HomeView : UserControl
             await new MeetingDetailsWindow(meeting).ShowDialog(owner);
     }
 
+    private async void OnMeetingNotesClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: CalEvent meeting } && TopLevel.GetTopLevel(this) is Window owner)
+            await new MeetingNotesWindow(meeting).ShowDialog(owner);
+    }
+
+    private async void OnEntryMeetingNotesClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: WorkEntry { Meeting: { } meeting } } && TopLevel.GetTopLevel(this) is Window owner)
+        {
+            e.Handled = true;
+            await new MeetingNotesWindow(meeting).ShowDialog(owner);
+        }
+    }
+
+    private async void OnMeetingToTimeLogClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: CalEvent meeting } && DataContext is HomeViewModel viewModel)
+            await viewModel.FillFromMeetingAsync(meeting);
+    }
+
     private async void OnEntriesListDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is HomeViewModel viewModel && viewModel.EditSelectedEntryCommand.CanExecute(null))

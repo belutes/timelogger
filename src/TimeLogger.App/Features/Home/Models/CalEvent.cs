@@ -4,6 +4,7 @@ namespace TimeLogger.App.Features.Home.Models;
 
 public sealed class CalEvent
 {
+    public string? Id { get; init; }
     public required string Subject { get; init; }
     public required string Location { get; init; }
     public required DateTimeOffset Start { get; init; }

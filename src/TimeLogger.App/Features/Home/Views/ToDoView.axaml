@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:services="using:TimeLogger.App.Features.Home.Services" xmlns:views="using:TimeLogger.App.Features.Home.Views" x:Class="TimeLogger.App.Features.Home.Views.ToDoView">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="22" RowSpacing="14">
+    <StackPanel Spacing="4"><TextBlock Text="To do" FontSize="24" FontWeight="Bold"/><TextBlock Text="Your tasks and meeting follow-ups, in one place." Foreground="{DynamicResource MutedBrush}"/></StackPanel>
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+      <TextBox x:Name="NewTitle" Watermark="Add a to-do item" />
+      <CalendarDatePicker Grid.Column="1" x:Name="NewDue" Watermark="Due date (optional)" Width="190" />
+      <Button Grid.Column="2" Content="Add to do" Classes="pill primary" Click="OnAdd" />
+      <TextBox Grid.Row="1" Grid.ColumnSpan="3" x:Name="NewNotes" Watermark="Notes (optional)" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="55" />
+    </Grid>
+    <TabControl Grid.Row="2" x:Name="ToDoTabs" SelectionChanged="OnListTabChanged">
+      <TabItem Header="Active">
+    <ListBox x:Name="ItemsList" SelectionChanged="OnSelected" Background="{DynamicResource SurfaceBrush}" BorderThickness="0">
+      <ListBox.ItemTemplate><DataTemplate x:DataType="services:ToDoItem">
+        <Border Background="{DynamicResource CardBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+          <StackPanel Spacing="3"><TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{Binding SourceLabel}" Foreground="{DynamicResource MutedBrush}"/><StackPanel Orientation="Horizontal" Spacing="14"><TextBlock Text="{Binding DueLabel}"/><TextBlock Text="{Binding StatusLabel}"/></StackPanel></StackPanel>
+        </Border>
+      </DataTemplate></ListBox.ItemTemplate>
+    </ListBox>
+      </TabItem>
+      <TabItem Header="Archive">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <ItemsControl x:Name="ArchiveGroups">
+            <ItemsControl.ItemTemplate><DataTemplate x:DataType="views:ArchiveMonth">
+              <StackPanel Spacing="8" Margin="0,0,0,18">
+                <TextBlock Text="{Binding MonthLabel}" FontSize="17" FontWeight="Bold" />
+                <ItemsControl ItemsSource="{Binding Items}"><ItemsControl.ItemTemplate><DataTemplate x:DataType="services:ToDoItem">
+                  <Border Background="{DynamicResource CardBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                      <StackPanel Spacing="3"><TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{Binding SourceLabel}" Foreground="{DynamicResource MutedBrush}"/><TextBlock Text="{Binding CompletedLabel}"/><TextBlock Text="{Binding DueLabel}"/><TextBlock Text="{Binding Notes}" TextWrapping="Wrap" /></StackPanel>
+                      <Button Grid.Column="1" Content="Restore" Classes="pill" Click="OnRestore" VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+              </StackPanel>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+    <Border Grid.Row="3" x:Name="EditPanel" Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="12">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+        <TextBox x:Name="EditTitle" Watermark="Select an item to edit" IsEnabled="False" />
+        <CalendarDatePicker Grid.Column="1" x:Name="EditDue" Watermark="Due date (optional)" Width="190" IsEnabled="False" />
+        <Button Grid.Column="2" x:Name="SaveButton" Content="Save changes" Classes="pill" Click="OnSave" IsEnabled="False" />
+        <Button Grid.Column="3" x:Name="CompleteButton" Content="Mark complete" Classes="pill" Click="OnComplete" IsEnabled="False" />
+        <TextBox Grid.Row="1" Grid.ColumnSpan="4" x:Name="EditNotes" Watermark="Notes (optional)" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="70" IsEnabled="False" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

@@ -103,6 +103,7 @@
                   <TextBlock Text="{Binding DateLabel}"/>
                   <TextBlock Text="{Binding TimeRange}"/>
                   <TextBlock Text="{Binding Notes}" Opacity="0.85" TextWrapping="Wrap"/>
+                  <Button Content="Notes" Classes="pill" IsVisible="{Binding HasMeetingNotes}" Click="OnEntryMeetingNotesClicked" HorizontalAlignment="Left" />
                 </StackPanel>
               </Border>
             </DataTemplate>
@@ -147,7 +148,11 @@
                     <TextBlock Text="{Binding DateLine}"/>
                     <TextBlock Text="{Binding TimeRange}"/>
                     <TextBlock Text="{Binding Location}" Opacity="0.85"/>
-                    <Button Content="View details  →" Classes="pill" Click="OnMeetingDetailsClicked" HorizontalAlignment="Left" Margin="0,6,0,0"/>
+                    <WrapPanel Orientation="Horizontal" Margin="0,6,0,0">
+                      <Button Content="View details  →" Classes="pill" Click="OnMeetingDetailsClicked" Margin="0,0,8,6" />
+                      <Button Content="Notes" Classes="pill" Click="OnMeetingNotesClicked" Margin="0,0,8,6" />
+                      <Button Content="Add to time log" Classes="pill" Click="OnMeetingToTimeLogClicked" Margin="0,0,0,6" />
+                    </WrapPanel>
                   </StackPanel>
                 </Border>
               </DataTemplate>
