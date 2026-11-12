@@ -21,6 +21,7 @@ public partial class MainWindow : Window
         try { _settings = _store.Load(); }
         catch (Exception ex) { _loadError = ex.Message; }
         ApplyTheme(_settings.Theme);
+        AssistantPage.SetAppDataAccess(_loadError is null && _settings.AllowAssistantAppData);
         DataContextChanged += (_, _) => ApplyTasks();
         Opened += async (_, _) =>
         {
@@ -54,7 +55,7 @@ public partial class MainWindow : Window
     private async void OnThemeToggleClicked(object? sender, RoutedEventArgs e)
     {
         if (_loadError is not null) { await ShowErrorAsync("Settings unavailable", "The settings file could not be read, so it will not be overwritten."); return; }
-        var next = new AppSettings { TaskTitles = new(_settings.TaskTitles), Theme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? "Light" : "Dark" };
+        var next = new AppSettings { TaskTitles = new(_settings.TaskTitles), Theme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? "Light" : "Dark", AllowAssistantAppData = _settings.AllowAssistantAppData };
         try { _store.Save(next); _settings = next; ApplyTheme(next.Theme); }
         catch (Exception ex) { await ShowErrorAsync("Could not save settings", ex.Message); }
     }
@@ -64,7 +65,7 @@ public partial class MainWindow : Window
         if (_loadError is not null) { await ShowErrorAsync("Settings unavailable", "The settings file could not be read, so it will not be overwritten."); return; }
         var updated = await new SettingsWindow(_settings).ShowDialog<AppSettings?>(this);
         if (updated is null) return;
-        try { _store.Save(updated); _settings = updated; ApplyTasks(); ApplyTheme(updated.Theme); }
+        try { _store.Save(updated); _settings = updated; ApplyTasks(); ApplyTheme(updated.Theme); AssistantPage.SetAppDataAccess(updated.AllowAssistantAppData); }
         catch (Exception ex) { await ShowErrorAsync("Could not save settings", ex.Message); }
     }
 

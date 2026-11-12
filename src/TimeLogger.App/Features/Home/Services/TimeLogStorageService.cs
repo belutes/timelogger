@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TimeLogger.App.Features.Home.Models;
@@ -15,9 +16,22 @@ public sealed class TimeLogStorageService : ITimeLogStorageService
         WriteIndented = true
     };
 
-    public string RecordsDirectoryPath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
-        "Time Log Records");
+    public string RecordsDirectoryPath { get; }
+
+    public TimeLogStorageService(string? recordsDirectoryPath = null) => RecordsDirectoryPath = recordsDirectoryPath ?? Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Time Log Records");
+
+    public async Task<IReadOnlyList<WorkEntry>> LoadAllEntriesAsync()
+    {
+        if (!Directory.Exists(RecordsDirectoryPath)) return Array.Empty<WorkEntry>();
+        var entries = new List<WorkEntry>();
+        foreach (var file in Directory.EnumerateFiles(RecordsDirectoryPath, "*.json"))
+        {
+            if (!DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)) continue;
+            entries.AddRange((await ReadMonthRecordAsync(file)).Entries);
+        }
+        return entries.OrderBy(e => e.Date).ThenBy(e => e.Start).ToList();
+    }
 
     public bool RecordsDirectoryExists() => Directory.Exists(RecordsDirectoryPath);
 

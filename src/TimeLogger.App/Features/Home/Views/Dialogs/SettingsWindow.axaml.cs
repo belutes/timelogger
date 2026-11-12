@@ -15,6 +15,7 @@ public partial class SettingsWindow : Window
     {
         foreach (var task in settings.TaskTitles) _tasks.Add(task);
         ThemePicker.SelectedIndex = settings.Theme switch { "Light" => 1, "System" => 2, _ => 0 };
+        AssistantAppData.IsChecked = settings.AllowAssistantAppData;
     }
 
     private void OnAddClicked(object? sender, RoutedEventArgs e)
@@ -35,7 +36,8 @@ public partial class SettingsWindow : Window
     private void OnSaveClicked(object? sender, RoutedEventArgs e) => Close(new AppSettings
     {
         TaskTitles = _tasks.ToList(),
-        Theme = ThemePicker.SelectedIndex switch { 1 => "Light", 2 => "System", _ => "Dark" }
+        Theme = ThemePicker.SelectedIndex switch { 1 => "Light", 2 => "System", _ => "Dark" },
+        AllowAssistantAppData = AssistantAppData.IsChecked == true
     });
     private void OnCancelClicked(object? sender, RoutedEventArgs e) => Close(null);
     private void ShowError(string message) { ErrorText.Text = message; ErrorText.IsVisible = true; }

@@ -10,6 +10,7 @@ public sealed class AppSettings
 {
     public List<string> TaskTitles { get; set; } = ["Tickets", "Meeting", "Power BI", "QA Testing", "Knowledge Base Development"];
     public string Theme { get; set; } = "Dark";
+    public bool AllowAssistantAppData { get; set; } = true;
 }
 
 public sealed class AppSettingsStore
