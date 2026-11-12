@@ -1,12 +1,97 @@
 using System;
 using System.Linq;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TimeLogger.App.Features.Home.Models;
+using TimeLogger.App.Features.Home.Services;
 
 namespace TimeLogger.App.Features.Home.ViewModels;
 
 public sealed partial class HomeViewModel
 {
+    public async Task FillFromMeetingAsync(CalEvent meeting)
+    {
+        if (_dialogs is null) return;
+        if (meeting.IsAllDay || meeting.Start.Date != meeting.End.Date || meeting.End <= meeting.Start ||
+            meeting.Start.Second != 0 || meeting.End.Second != 0)
+        {
+            await _dialogs.ShowAlertAsync("Meeting time cannot be filled", "This time log supports meetings within one day, with times accurate to the minute. Please enter this meeting manually.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Notes) && !await _dialogs.ShowConfirmationAsync(
+                "Replace current entry?", "The current entry notes will be replaced with this meeting's details.", "Replace", "Cancel")) return;
+
+        MeetingNotes savedNotes;
+        try { savedNotes = new MeetingNotesStore().Load(meeting.Id ?? ""); }
+        catch (Exception ex)
+        {
+            await _dialogs.ShowAlertAsync("Meeting notes unavailable", $"The meeting could not be copied because its saved notes could not be read. {ex.Message}");
+            return;
+        }
+
+        var details = new StringBuilder();
+        details.AppendLine(meeting.Subject);
+        details.AppendLine($"Location: {meeting.Location}");
+        details.AppendLine($"Organizer: {meeting.Organizer}");
+        details.AppendLine($"Invitees: {meeting.Attendees}");
+        details.AppendLine($"Availability: {meeting.Status}; Response: {meeting.Response}; Importance: {meeting.Importance}");
+        details.AppendLine($"Categories: {meeting.Categories}");
+        if (meeting.IsCancelled) details.AppendLine("Cancelled");
+        var agenda = MeetingAgenda(meeting.Description);
+        if (!string.IsNullOrWhiteSpace(agenda)) details.AppendLine($"Description: {agenda}");
+        if (!string.IsNullOrWhiteSpace(savedNotes.Notes)) details.AppendLine($"Notes: {savedNotes.Notes}");
+        if (savedNotes.Items.Count > 0) details.AppendLine($"To do: {string.Join("; ", savedNotes.Items.Select(x => x.Title))}");
+
+        SelectedDate = meeting.Start.Date;
+        var start = meeting.Start.ToString("hh:mm tt", CultureInfo.InvariantCulture);
+        var end = meeting.End.ToString("hh:mm tt", CultureInfo.InvariantCulture);
+        AddTimeOption(start);
+        AddTimeOption(end);
+        _isUpdatingTimes = true;
+        SelectedStartTime = start;
+        SelectedEndTime = end;
+        _isUpdatingTimes = false;
+        var task = TaskOptions.FirstOrDefault(x => string.Equals(x, "Meeting", StringComparison.OrdinalIgnoreCase));
+        if (task is null)
+        {
+            task = "Meeting";
+            TaskOptions.Insert(Math.Max(0, TaskOptions.IndexOf("Other")), task);
+        }
+        SelectedTask = task;
+        Notes = details.ToString().TrimEnd();
+        _pendingMeeting = new MeetingReference { Id = meeting.Id!, Subject = meeting.Subject, Start = meeting.Start, End = meeting.End, Attendees = meeting.Attendees, IsAllDay = meeting.IsAllDay };
+    }
+
+    private static string MeetingAgenda(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description) || description == "Not provided") return "";
+        var lines = description.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        var end = lines.Length;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var line = lines[i].Trim();
+            if (Regex.IsMatch(line, @"^(?:Microsoft Teams(?: meeting| Need help\?)?|Join (?:the meeting now|Microsoft Teams Meeting|on your computer|on the web)|Click here to join the meeting|Meeting ID:|Dial in by phone|Join Zoom Meeting)\b", RegexOptions.IgnoreCase))
+            {
+                end = i;
+                while (end > 0 && (string.IsNullOrWhiteSpace(lines[end - 1]) || Regex.IsMatch(lines[end - 1].Trim(), @"^[_\-─━]{3,}$"))) end--;
+                break;
+            }
+        }
+        return string.Join(Environment.NewLine, lines.Take(end)).Trim();
+    }
+
+    private void AddTimeOption(string value)
+    {
+        if (TimeOptions.Contains(value)) return;
+        if (!TryParseTime(value, out var time)) return;
+        var index = 0;
+        while (index < TimeOptions.Count && TryParseTime(TimeOptions[index], out var existing) && existing < time) index++;
+        TimeOptions.Insert(index, value);
+    }
+
     private async Task HandleTaskSelectionChangedAsync(string? selectedTask)
     {
         if (_suppressTaskSelectionPrompt)
@@ -91,6 +176,7 @@ public sealed partial class HomeViewModel
         }
 
         Notes = string.Empty;
+        _pendingMeeting = null;
         AdvanceTimeAfterAdd(entry.End);
     }
 
@@ -241,7 +327,8 @@ public sealed partial class HomeViewModel
             Start = start,
             End = end,
             Task = SelectedTask!,
-            Notes = Notes.Trim()
+            Notes = Notes.Trim(),
+            Meeting = _pendingMeeting
         };
     }
 
@@ -283,6 +370,6 @@ public sealed partial class HomeViewModel
 
     private bool CanDeleteSelected()
     {
-        return SelectedEntry is not null;
+        return _entriesReady && SelectedEntry is not null;
     }
 }

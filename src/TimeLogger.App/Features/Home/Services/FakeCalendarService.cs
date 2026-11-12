@@ -15,6 +15,7 @@ public sealed class FakeCalendarService : ICalendarService
         {
             new()
             {
+                Id = $"fake-team-sync-{day:yyyy-MM-dd}",
                 Subject = "Team Sync",
                 Location = "Online",
                 Start = day.AddHours(9),
@@ -22,6 +23,7 @@ public sealed class FakeCalendarService : ICalendarService
             },
             new()
             {
+                Id = $"fake-focus-block-{day:yyyy-MM-dd}",
                 Subject = "Focus Block",
                 Location = "Desk",
                 Start = day.AddHours(9.75),
@@ -29,6 +31,7 @@ public sealed class FakeCalendarService : ICalendarService
             },
             new()
             {
+                Id = $"fake-one-on-one-{day:yyyy-MM-dd}",
                 Subject = "1:1",
                 Location = "Teams",
                 Start = day.AddHours(13),

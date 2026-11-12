@@ -34,6 +34,11 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm) vm.Home.SetTaskTitles(_settings.TaskTitles);
     }
 
+    private void OnTabChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (ReferenceEquals(e.Source, MainTabs) && MainTabs.SelectedIndex == 2) ToDoPage?.Refresh();
+    }
+
     private void ApplyTheme(string theme)
     {
         if (Application.Current is not { } app) return;

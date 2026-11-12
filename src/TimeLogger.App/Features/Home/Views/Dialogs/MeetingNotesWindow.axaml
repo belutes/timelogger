@@ -1,0 +1,28 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TimeLogger.App.Features.Home.Views.Dialogs.MeetingNotesWindow"
+        Width="680" Height="740" MinWidth="400" MinHeight="480" Title="Meeting notes"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="20" RowSpacing="12">
+    <StackPanel Spacing="5">
+      <TextBlock Text="Meeting notes" FontSize="23" FontWeight="Bold" />
+      <TextBlock x:Name="SubjectText" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <TextBlock x:Name="ScheduleText" TextWrapping="Wrap" />
+    </StackPanel>
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Invitees" FontWeight="SemiBold" />
+        <TextBox x:Name="AttendeesText" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" MaxHeight="125" />
+        <TextBlock Text="Notes" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <TextBox x:Name="NotesBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="180" Watermark="Add your meeting notes..." />
+        <TextBlock Text="Meeting follow-ups" FontWeight="SemiBold" Margin="0,8,0,0" />
+        <TextBlock x:Name="ExistingToDos" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+        <TextBox x:Name="ToDoBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="100" Watermark="Add follow-up items, one per line..." />
+        <TextBlock Text="Set due dates and update follow-ups on the To do tab." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+      </StackPanel>
+    </ScrollViewer>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="Cancel" Click="OnCancelClicked" />
+      <Button x:Name="SaveButton" Content="Save notes" Click="OnSaveClicked" />
+    </StackPanel>
+  </Grid>
+</Window>

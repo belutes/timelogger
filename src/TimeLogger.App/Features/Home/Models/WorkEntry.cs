@@ -11,10 +11,24 @@ public sealed class WorkEntry
     public TimeSpan End { get; set; }
     public string Task { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
+    public MeetingReference? Meeting { get; set; }
+
+    [JsonIgnore]
+    public bool HasMeetingNotes => Meeting is not null && !string.IsNullOrWhiteSpace(Meeting.Id);
 
     [JsonIgnore]
     public string DateLabel => Date.ToString("MM/dd/yy");
 
     [JsonIgnore]
     public string TimeRange => $"{DateTime.Today.Add(Start):hh:mm tt} - {DateTime.Today.Add(End):hh:mm tt}";
+}
+
+public sealed class MeetingReference
+{
+    public string Id { get; set; } = "";
+    public string Subject { get; set; } = "";
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset End { get; set; }
+    public string Attendees { get; set; } = "Not provided";
+    public bool IsAllDay { get; set; }
 }

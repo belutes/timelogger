@@ -22,13 +22,17 @@ public sealed partial class HomeViewModel : ViewModelBase
     private string _selectedStartTime = string.Empty;
     private string _selectedEndTime = string.Empty;
     private string _totalDuration = "0h 0m";
-    private string _selectedCalendarRange = "Today";
+    private string _selectedCalendarRange = "Day";
     private WorkEntry? _selectedEntry;
     private string? _lastNonOtherTask;
     private bool _suppressTaskSelectionPrompt;
     private bool _isUpdatingTimes;
     private HashSet<string> _configuredTaskTitles = new(StringComparer.OrdinalIgnoreCase);
     private string? _lastCalendarError;
+    private MeetingReference? _pendingMeeting;
+    private bool _entriesReady;
+    private int _entriesLoadVersion;
+    private int _calendarLoadVersion;
 
     public HomeViewModel(
         ITimeLogStorageService storage,
@@ -61,13 +65,13 @@ public sealed partial class HomeViewModel : ViewModelBase
 
         QuickRanges = new ObservableCollection<string>
         {
-            "Today",
-            "This Week",
-            "This Month"
+            "Day",
+            "Week",
+            "Month"
         };
         SelectedCalendarRange = QuickRanges[0];
 
-        AddEntryCommand = new AsyncRelayCommand(AddEntryAsync);
+        AddEntryCommand = new AsyncRelayCommand(AddEntryAsync, () => _entriesReady);
         DeleteSelectedCommand = new AsyncRelayCommand(DeleteSelectedAsync, CanDeleteSelected);
         EditSelectedEntryCommand = new AsyncRelayCommand(EditSelectedEntryAsync, CanDeleteSelected);
         RefreshCalendarCommand = new AsyncRelayCommand(LoadCalendarEventsAsync);
@@ -112,7 +116,19 @@ public sealed partial class HomeViewModel : ViewModelBase
     }
 
     public string SelectedDateDisplay => (SelectedDate ?? DateTime.Today).ToString("MM/dd/yy");
-    public string CalendarGroupLabel => $"Today - {(SelectedDate ?? DateTime.Today):ddd, MMM d, yyyy}";
+    public string CalendarGroupLabel
+    {
+        get
+        {
+            var (start, endExclusive) = ResolveCalendarRange();
+            return SelectedCalendarRange switch
+            {
+                "Week" => $"Week: {start:MMM d, yyyy} – {endExclusive.AddDays(-1):MMM d, yyyy}",
+                "Month" => $"Month: {start:MMMM yyyy}",
+                _ => $"{(start.Date == DateTime.Today ? "Today" : "Day")}: {start:ddd, MMM d, yyyy}"
+            };
+        }
+    }
 
     public ObservableCollection<string> TimeOptions { get; }
 
@@ -153,6 +169,7 @@ public sealed partial class HomeViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedTask, value))
             {
+                _pendingMeeting = null;
                 _ = HandleTaskSelectionChangedAsync(value);
             }
         }
@@ -197,6 +214,7 @@ public sealed partial class HomeViewModel : ViewModelBase
         {
             if (SetProperty(ref _selectedCalendarRange, value))
             {
+                OnPropertyChanged(nameof(CalendarGroupLabel));
                 _ = LoadCalendarEventsAsync();
             }
         }

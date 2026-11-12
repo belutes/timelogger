@@ -115,7 +115,8 @@ public sealed class TimeLogStorageService : ITimeLogStorageService
             Start = entry.Start,
             End = entry.End,
             Task = entry.Task,
-            Notes = entry.Notes
+            Notes = entry.Notes,
+            Meeting = entry.Meeting
         };
     }
 

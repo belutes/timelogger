@@ -55,9 +55,10 @@
         <Button Grid.Column="3" Classes="pill" Content="⚙  Settings" Click="OnSettingsClicked" VerticalAlignment="Center" />
       </Grid>
     </Border>
-    <TabControl Grid.Row="1" Name="MainTabs" Margin="8,6,8,8" SelectedIndex="{Binding SelectedTabIndex}">
+    <TabControl Grid.Row="1" Name="MainTabs" Margin="8,6,8,8" SelectedIndex="{Binding SelectedTabIndex}" SelectionChanged="OnTabChanged">
       <TabItem Header="Time log"><home:HomeView DataContext="{Binding Home}" /></TabItem>
       <TabItem Header="Insights"><analysis:DataAnalysisView DataContext="{Binding DataAnalysis}" /></TabItem>
+      <TabItem Header="To do"><home:ToDoView x:Name="ToDoPage" /></TabItem>
     </TabControl>
   </Grid>
 </Window>

@@ -51,7 +51,7 @@ public sealed class GraphCalendarService : ICalendarService
 
         var startIso = Uri.EscapeDataString(start.ToString("o", CultureInfo.InvariantCulture));
         var endIso = Uri.EscapeDataString(endExclusive.ToString("o", CultureInfo.InvariantCulture));
-        var select = Uri.EscapeDataString("subject,start,end,location,organizer,attendees,body,onlineMeeting,webLink,showAs,responseStatus,importance,categories,isAllDay,isCancelled");
+        var select = Uri.EscapeDataString("id,subject,start,end,location,organizer,attendees,body,onlineMeeting,webLink,showAs,responseStatus,importance,categories,isAllDay,isCancelled");
         var orderBy = Uri.EscapeDataString("start/dateTime");
 
         var nextLink =
@@ -63,7 +63,7 @@ public sealed class GraphCalendarService : ICalendarService
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, nextLink);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.TryAddWithoutValidation("Prefer", $"outlook.timezone=\"{_timeZoneId}\", outlook.body-content-type=\"text\"");
+            request.Headers.TryAddWithoutValidation("Prefer", $"outlook.timezone=\"{_timeZoneId}\", outlook.body-content-type=\"text\", IdType=\"ImmutableId\"");
 
             using var response = await _http.SendAsync(request);
             response.EnsureSuccessStatusCode();
@@ -154,6 +154,7 @@ public sealed class GraphCalendarService : ICalendarService
 
         return new CalEvent
         {
+            Id = StringProperty(eventNode, "id"),
             Subject = subject,
             Location = location,
             Start = start,
