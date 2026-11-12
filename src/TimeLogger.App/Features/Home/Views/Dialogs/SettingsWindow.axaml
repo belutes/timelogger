@@ -1,8 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="TimeLogger.App.Features.Home.Views.Dialogs.SettingsWindow"
-        Width="520" Height="620" MinWidth="430" MinHeight="480" Title="Settings"
+        Width="560" Height="720" MinWidth="430" MinHeight="580" Title="Settings"
         WindowStartupLocation="CenterOwner" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}">
-  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="22" RowSpacing="12">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto" Margin="22" RowSpacing="12">
     <StackPanel Spacing="4">
       <TextBlock Text="Settings" FontSize="23" FontWeight="Bold" />
       <TextBlock Text="Make your workspace your own." Foreground="{DynamicResource MutedBrush}" />
@@ -31,7 +31,11 @@
       </Grid>
       <TextBlock x:Name="ErrorText" Foreground="#D94949" TextWrapping="Wrap" IsVisible="False" />
     </StackPanel>
-    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+    <StackPanel Grid.Row="5" Spacing="5">
+      <CheckBox x:Name="AssistantAppData" Content="Allow Jack to use TimeLogger data" />
+      <TextBlock Text="When you ask Jack a question, time entries, to-dos, meeting notes, and currently loaded calendar details may be sent to OpenAI. Turn this off to chat without app data." TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+    </StackPanel>
+    <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
       <Button Content="Cancel" Click="OnCancelClicked" />
       <Button Content="Save settings" Click="OnSaveClicked" />
     </StackPanel>

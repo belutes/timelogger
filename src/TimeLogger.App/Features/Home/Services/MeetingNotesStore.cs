@@ -91,6 +91,12 @@ public sealed class MeetingNotesStore
         return result;
     }
 
+    public IReadOnlyList<MeetingNotes> GetAllMeetingNotes()
+    {
+        if (!Directory.Exists(_directory)) return Array.Empty<MeetingNotes>();
+        return Directory.GetFiles(_directory, "*.json").Select(Read).ToList();
+    }
+
     public void UpdateMeetingItem(ToDoItem item)
     {
         var path = PathForKey(item.SourceKey);

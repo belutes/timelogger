@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TimeLogger.App.Features.Assistant.Views.AssistantView">
+  <Grid Margin="22" ColumnDefinitions="260,*" ColumnSpacing="18">
+    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="14" Padding="18">
+      <StackPanel Spacing="12">
+        <TextBlock Text="MEET YOUR ASSISTANT" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource MutedBrush}" />
+        <Border Background="{DynamicResource InsetBrush}" CornerRadius="12" Height="290" ClipToBounds="True" HorizontalAlignment="Stretch">
+          <Canvas Width="145" Height="290" ClipToBounds="True" HorizontalAlignment="Center">
+            <Image x:Name="JackPortrait" Source="avares://TimeLogger.App/Assets/jack-sprites.png" Width="870" Height="290" Stretch="Fill" />
+          </Canvas>
+        </Border>
+        <TextBlock Text="Jack" FontSize="24" FontWeight="Bold" />
+        <TextBlock Text="Your workday assistant" Foreground="{DynamicResource MutedBrush}" />
+        <TextBlock Text="Here to help you understand your time, organize follow-ups, and plan what comes next." TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+    <Grid Grid.Column="1" RowDefinitions="Auto,*,Auto" RowSpacing="16">
+      <StackPanel Spacing="4">
+        <TextBlock Text="AI Assistant" FontSize="24" FontWeight="Bold" />
+        <TextBlock Text="A little perspective for your workday." Foreground="{DynamicResource MutedBrush}" />
+      </StackPanel>
+      <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="14" Padding="22">
+        <Grid RowDefinitions="Auto,*" RowSpacing="16">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Border Width="38" Height="38" CornerRadius="19" Background="{DynamicResource AccentBrush}"><TextBlock Text="J" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+            <StackPanel VerticalAlignment="Center"><TextBlock Text="Jack" FontWeight="Bold" FontSize="16"/><TextBlock Text="AI assistant" Foreground="{DynamicResource MutedBrush}" FontSize="12" /></StackPanel>
+          </StackPanel>
+          <ScrollViewer Grid.Row="1" x:Name="ChatScroll" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="Messages" Spacing="12">
+              <Border Background="{DynamicResource CardBrush}" CornerRadius="12" Padding="16"><TextBlock Text="Hi Brian! Ask me about your work and I can help you find patterns, review follow-ups, and plan your next steps." TextWrapping="Wrap" /></Border>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+      <StackPanel Grid.Row="2" Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <CheckBox x:Name="ReadAloud" Content="Read replies aloud" VerticalAlignment="Center" />
+          <Button x:Name="ReadButton" Content="Read last response" Classes="pill" Click="OnReadLast" IsEnabled="False" />
+          <Button x:Name="StopButton" Content="Stop speaking" Classes="pill" Click="OnStopSpeaking" IsEnabled="False" />
+        </StackPanel>
+        <TextBlock x:Name="DataAccessText" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
+        <TextBlock Text="Your question and recent chat are sent to OpenAI. Start a new chat to clear previous messages." FontSize="12" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10"><TextBox x:Name="PromptBox" Watermark="Ask Jack about your work..." AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52" MaxHeight="110"/><Button x:Name="NewChatButton" Grid.Column="1" Content="New chat" Classes="pill" Click="OnNewChat" VerticalAlignment="Bottom" /><Button x:Name="SendButton" Grid.Column="2" Content="Send" Classes="pill primary" Click="OnSend" VerticalAlignment="Bottom" /></Grid>
+        <TextBlock x:Name="StatusText" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>

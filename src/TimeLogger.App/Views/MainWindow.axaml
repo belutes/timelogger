@@ -3,6 +3,7 @@
         xmlns:vm="using:TimeLogger.App.ViewModels"
         xmlns:home="using:TimeLogger.App.Features.Home.Views"
         xmlns:analysis="using:TimeLogger.App.Features.DataAnalysis.Views"
+        xmlns:assistant="using:TimeLogger.App.Features.Assistant.Views"
         x:Class="TimeLogger.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Width="1180" Height="800" MinWidth="980" MinHeight="640"
@@ -59,6 +60,7 @@
       <TabItem Header="Time log"><home:HomeView DataContext="{Binding Home}" /></TabItem>
       <TabItem Header="Insights"><analysis:DataAnalysisView DataContext="{Binding DataAnalysis}" /></TabItem>
       <TabItem Header="To do"><home:ToDoView x:Name="ToDoPage" /></TabItem>
+      <TabItem Header="AI Assistant"><assistant:AssistantView x:Name="AssistantPage" /></TabItem>
     </TabControl>
   </Grid>
 </Window>
